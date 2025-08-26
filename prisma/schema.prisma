@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Petition {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  version      String   // human readable like v1.0
+  bodyMarkdown String
+  goalCount    Int      @default(1000)
+  isLive       Boolean  @default(true)
+  heroImages   Json     // array of {id,url,alt,order} mirrors admin slider
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  signatures Signature[]
+
+  @@map("petitions")
+}
+
+model Signature {
+  id                 String    @id @default(cuid())
+  petitionId         String
+  firstName          String
+  lastName           String
+  email              String
+  city               String?
+  state              String?
+  zip                String?
+  country            String?   // optional if collected
+  comment            String?   // optional public message
+  consent            Boolean
+  method             String    // "drawn" or "typed"
+  signatureImage     Bytes?    // PNG bytes if drawn
+  typedSignature     String?   // typed name if typed
+  petitionHash       String
+  signatureImageHash String?
+  auditHash          String    @unique
+  ip                 String
+  userAgent          String
+  emailVerifiedAt    DateTime
+  createdAt          DateTime  @default(now())
+
+  receiptPdf     Bytes?  // generated PDF certificate
+  receiptPdfMime String? // "application/pdf"
+
+  petition Petition @relation(fields: [petitionId], references: [id])
+
+  @@index([petitionId, createdAt])
+  @@index([email, petitionId])
+  @@index([auditHash])
+  @@map("signatures")
+}
+
+model OtpRequest {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  ip         String
+  createdAt  DateTime  @default(now())
+
+  @@index([email, createdAt])
+  @@map("otp_requests")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
+}
+
+model Branding {
+  id             Int    @id @default(1)
+  siteTitleLine1 String @default("Petition")
+  siteTitleLine2 String @default("Make your voice heard")
+
+  @@map("branding")
+}
+
+model ContactInfo {
+  id           Int     @id @default(1)
+  contactEmail String  @default("contact@example.com")
+  contactPhone String?
+  address      String?
+  socialLinks  Json?   // {x,facebook,instagram}
+
+  @@map("contact_info")
+}
+
+model FormHelpText {
+  id       Int    @id @default(1)
+  whyLine1 String @default("Add your voice to this effort.")
+  whyLine2 String @default("Every signature helps.")
+  whyLine3 String @default("Share with friends after signing.")
+
+  @@map("form_help_text")
+}
