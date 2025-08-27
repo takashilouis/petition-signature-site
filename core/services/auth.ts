@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../lib/prisma';
 import { createSession, deleteSession, getSession } from '../../lib/session';
 import { adminLoginRateLimit } from './rateLimit';
